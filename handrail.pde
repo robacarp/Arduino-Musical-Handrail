@@ -1,10 +1,10 @@
-#define NETWORK_SIZE 24
+#define NETWORK_SIZE 12
 #define NETWORK_DEPTH 13
 #define AVG_DIVISOR 3
 
 //there are 8 spots for the chip to average, so historical data is weighted pretty heavily
-#define DIFF_THRESHOLD 100
-#define DETECT_COUNT 3
+#define DIFF_THRESHOLD 50
+#define DETECT_COUNT 2
 
 #define BOARD_SELECT_SLOT 0
 #define NIBBLE_SLOT 1
@@ -31,22 +31,19 @@ int network[NETWORK_SIZE][NETWORK_DEPTH] = {
   {2,11,0,0, 0,0,0},
   {2,12,0,0, 0,0,0},
 
-//*
-  {1,0, 0,0, 0,0,0},
-  {1,1, 0,0, 0,0,0},
-  {1,2, 0,0, 0,0,0},
-  {1,3, 0,0, 0,0,0},
-  {1,4, 0,0, 0,0,0},
-  {1,5, 0,0, 0,0,0},
-  {1,7, 0,0, 0,0,0},
-  {1,8, 0,0, 0,0,0},
-  {1,9, 0,0, 0,0,0},
-  {1,10,0,0, 0,0,0},
-  {1,11,0,0, 0,0,0},
-  {1,12,0,0, 0,0,0},
-
-
-}; /* */
+  //{1,0, 0,0, 0,0,0},
+  //{1,1, 0,0, 0,0,0},
+  //{1,2, 0,0, 0,0,0},
+  //{1,3, 0,0, 0,0,0},
+  //{1,4, 0,0, 0,0,0},
+  //{1,5, 0,0, 0,0,0},
+  //{1,7, 0,0, 0,0,0},
+  //{1,8, 0,0, 0,0,0},
+  //{1,9, 0,0, 0,0,0},
+  //{1,10,0,0, 0,0,0},
+  //{1,11,0,0, 0,0,0},
+  //{1,12,0,0, 0,0,0},
+};
 
 int current_value_slot = VALUE_HISTORY_START;
 
@@ -91,17 +88,17 @@ void loop(){
 
   read_sensors(current_value_slot, network);
   //Serial.println(current_value_slot);
-  //print_network(network);
+  print_network(network);
   digitalWrite(13,state);
   state = ! state;
 
   increment();
 
-  delay(1000);
+  delay(50);
   ////Serial.println(VALUE_HISTORY_END);
-  Serial.println(); Serial.println(); Serial.println();
-  Serial.println(); Serial.println(); Serial.println();
-  Serial.println(); Serial.println(); Serial.println();
+  //Serial.println(); Serial.println(); Serial.println();
+  //Serial.println(); Serial.println(); Serial.println();
+  //Serial.println(); Serial.println(); Serial.println();
 }
 
 
@@ -121,15 +118,14 @@ void zero_detect_pins(){
 
 void print_network(int network[][NETWORK_DEPTH]){
   for (int i=0; i < NETWORK_SIZE; i++){
-    for (int j=0; j < NETWORK_DEPTH; j++){
-    //  Serial.print(network[i][DETECT_SLOT]);
-      Serial.print(network[i][j]);
-      Serial.print(' ');
-    }
-    Serial.println();
-    if (i == 11)
-      Serial.println();
+    //for (int j=0; j < NETWORK_DEPTH; j++){
+      Serial.print(network[i][DETECT_SLOT]);
+    //  Serial.print(network[i][j]);
+    //  Serial.print(' ');
+    //}
+    Serial.print(' ');
   }
+  Serial.println();
 }
 
 void read_sensors(int into_slot, int network[][NETWORK_DEPTH]){
@@ -163,26 +159,29 @@ int read_sensor(int network_port, int into_slot, int network[][NETWORK_DEPTH]){
 
   int diff = port[into_slot] - avg;
 
-  Serial.print("into_slot:");
-  Serial.print(into_slot);
-  Serial.print("  ");
+  //Serial.print("into_slot:");
+  //Serial.print(into_slot);
+  //Serial.print("  ");
 
-  for (int i=0; i<NETWORK_DEPTH; i++){
-    Serial.print(port[i]);
-    Serial.print(' ');
-  }
-  Serial.print("...............");
-  Serial.print("diff:");
-  Serial.print(diff);
-  Serial.print(" avg:");
-  Serial.print(avg);
-  Serial.print(" detect:");
-  Serial.print(port[DETECT_SLOT]);
-  Serial.print(" detect_ct:");
-  Serial.print(port[DETECT_COUNT_SLOT]);
-  Serial.println();
+  //for (int i=0; i<NETWORK_DEPTH; i++){
+  //  Serial.print(port[i]);
+  //  Serial.print(' ');
+  //}
+  //Serial.print("...............");
+  //Serial.print("diff:");
+  //Serial.print(diff);
+  //Serial.print(" avg:");
+  //Serial.print(avg);
+  //Serial.print(" detect:");
+  //Serial.print(port[DETECT_SLOT]);
+  //Serial.print(" detect_ct:");
+  //Serial.print(port[DETECT_COUNT_SLOT]);
+  //Serial.println();
 
   //we no longer care about the history, zero it out and set the avg to our current value
+  if (port[DETECT_SLOT])
+    port[DETECT_SLOT] ++;
+
   if (abs(diff) > DIFF_THRESHOLD){
     port[DETECT_COUNT_SLOT] ++;
 
@@ -194,6 +193,6 @@ int read_sensor(int network_port, int into_slot, int network[][NETWORK_DEPTH]){
     port[DETECT_COUNT_SLOT] = 0;
   }
 
-  if (! digitalRead(7))
-    delay(100);
+  if (port[DETECT_SLOT] > 60)
+    port[DETECT_SLOT] = port[DETECT_COUNT] = 0;
 }
